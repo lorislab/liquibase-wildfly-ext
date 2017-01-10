@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.liquibase.org/xml/ns/dbchangelog-ext/liquibase-wildfly"
+            xmlns:lb="http://www.liquibase.org/xml/ns/dbchangelog"
+            targetNamespace="http://www.liquibase.org/xml/ns/dbchangelog-ext/liquibase-wildfly"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd"
+            elementFormDefault="qualified">
+    <xsd:import namespace="http://www.liquibase.org/xml/ns/dbchangelog"
+                schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd" />
+
+    <xsd:element name="cli">
+        <xsd:complexType>
+            <xsd:attribute name="path" type="xsd:string" use="required" />
+            <xsd:attribute name="encoding" type="xsd:string" default="UTF-8"/>
+            <xsd:attribute name="relativeToChangelogFile" type="booleanExp" />
+        </xsd:complexType>
+    </xsd:element>
+        
+</xsd:schema>
