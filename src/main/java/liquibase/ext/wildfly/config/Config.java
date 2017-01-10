@@ -10,7 +10,7 @@ import liquibase.exception.UnexpectedLiquibaseException;
  */
 public class Config {
    
-    public static final String CONFIG_BASE = "org.lorislab.liquibase.wildfly";
+    public static final String CONFIG_BASE = "liquibase.wildfly";
 
     private Config() {
     }
@@ -25,7 +25,7 @@ public class Config {
     }
 
     public static String getLockProperty() {
-        return System.getProperty(CONFIG_BASE + ".property", "org.lorislab.liquibase.wildfly.lock.tmp");
+        return System.getProperty(CONFIG_BASE + ".property", "liquibase.wildfly.lock");
     }
 
 }
