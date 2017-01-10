@@ -9,6 +9,15 @@
     <xsd:import namespace="http://www.liquibase.org/xml/ns/dbchangelog"
                 schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd" />
 
+    <xsd:element name="maxCheck">
+        <xsd:complexType>
+            <xsd:attribute name="field" type="xsd:string" use="required" />
+            <xsd:attribute name="value" type="xsd:string" use="required" />
+            <xsd:attribute name="defaultId" type="xsd:string" use="required" />
+            <xsd:attribute name="expectedId" type="xsd:string" use="required" />            
+        </xsd:complexType>
+    </xsd:element>
+    
     <xsd:element name="cli">
         <xsd:complexType>
             <xsd:attribute name="path" type="xsd:string" use="required" />

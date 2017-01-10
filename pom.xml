@@ -153,6 +153,7 @@
                                     liquibase.ext.wildfly.sqlgenerator,
                                     liquibase.ext.wildfly.executor,
                                     liquibase.ext.wildfly.database,
+                                    liquibase.ext.wildfly.precondition,
                                     liquibase.ext.wildfly.statement</Liquibase-Package>
                             </manifestEntries>
                         </archive>

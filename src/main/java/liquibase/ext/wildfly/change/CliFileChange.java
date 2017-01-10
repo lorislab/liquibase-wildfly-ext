@@ -1,3 +1,18 @@
+/*
+ * Copyright 2017 lorislab.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package liquibase.ext.wildfly.change;
 
 import java.io.BufferedReader;
@@ -34,7 +49,7 @@ import liquibase.util.StringUtils;
 public class CliFileChange extends AbstractChange {
 
     private final static Pattern LTRIM = Pattern.compile("\\s+$");
-    
+
     private final String ENDCODING_DEFAULT = "UTF-8";
     private String encoding = ENDCODING_DEFAULT;
     private String path;
@@ -56,6 +71,9 @@ public class CliFileChange extends AbstractChange {
         List<SqlStatement> statments = new LinkedList<>();
 
         Properties prop = ((WildflyDatabase) database).getCliProperties();
+        if (prop == null) {
+            prop = new Properties();
+        }
 
         List<String> cli = new LinkedList<>();
         CliStatement cliStatment = new CliStatement(cli);
@@ -66,10 +84,8 @@ public class CliFileChange extends AbstractChange {
                     String line = reader.readLine();
                     while (line != null) {
                         line = LTRIM.matcher(line).replaceAll("");
-                            if (prop != null) {
-                                line = ExpressionValidator.expandExpressions(line, prop, false);
-                            }
-                            cli.add(line);
+                        line = ExpressionValidator.expandExpressions(line, prop, false);
+                        cli.add(line);
                         line = reader.readLine();
                     }
                 }
