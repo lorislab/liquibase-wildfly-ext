@@ -25,6 +25,7 @@ import liquibase.executor.jvm.JdbcExecutor;
 import liquibase.ext.wildfly.database.WildflyDatabaseConnection;
 import liquibase.ext.wildfly.statement.CliStatement;
 import liquibase.logging.LogFactory;
+import liquibase.servicelocator.LiquibaseService;
 import liquibase.sql.visitor.SqlVisitor;
 import liquibase.statement.SqlStatement;
 
@@ -32,10 +33,16 @@ import liquibase.statement.SqlStatement;
  *
  * @author Andrej Petras
  */
+@LiquibaseService(skip = true)
 public class WildflyExecutor extends JdbcExecutor {
-
+    
     protected Database database;
 
+    public WildflyExecutor(Database database) {
+        this.database = database;
+    }
+
+    
     @Override
     public void setDatabase(Database database) {
         this.database = database;

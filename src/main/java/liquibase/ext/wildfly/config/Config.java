@@ -40,7 +40,7 @@ public class Config {
     }
 
     public static String getLockProperty() {
-        return System.getProperty(CONFIG_BASE + ".property", "liquibase.wildfly.lock");
+        return System.getProperty(CONFIG_BASE + ".property", CONFIG_BASE + ".lock");
     }
 
 }

@@ -44,7 +44,13 @@
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
             <version>3.5.3</version>
-        </dependency>         
+        </dependency>   
+        <dependency>  
+            <groupId>org.wildfly.core</groupId>  
+            <artifactId>wildfly-cli</artifactId>  
+            <version>2.2.0.Final</version>
+        </dependency> 
+                      
         <dependency>  
             <groupId>org.wildfly.core</groupId>  
             <artifactId>wildfly-cli</artifactId>  

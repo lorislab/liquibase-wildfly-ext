@@ -46,6 +46,7 @@ import liquibase.exception.RollbackImpossibleException;
 import liquibase.exception.StatementNotSupportedOnDatabaseException;
 import liquibase.exception.ValidationErrors;
 import liquibase.executor.ExecutorService;
+import liquibase.ext.wildfly.executor.WildflyExecutor;
 import liquibase.logging.LogFactory;
 import liquibase.sql.Sql;
 import liquibase.sql.visitor.SqlVisitor;
@@ -71,7 +72,11 @@ public class WildflyDatabase implements Database {
     private String databaseChangeLogLockTableName;
     private String tablespaceName;
     private boolean outputDefaultCatalog;
-    
+
+    public WildflyDatabase() {
+        ExecutorService.getInstance().setExecutor(this, new WildflyExecutor(this));        
+    }
+
     /**
      * @see liquibase.database.Database#getDatabaseChangeLogTableName()
      */

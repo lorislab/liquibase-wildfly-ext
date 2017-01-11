@@ -16,6 +16,7 @@
 package liquibase.ext.wildfly.database;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,7 @@ import org.jboss.as.cli.impl.CommandContextConfiguration;
 import liquibase.ext.wildfly.jdbc.WildflyConnection;
 import liquibase.logging.LogFactory;
 import org.jboss.as.cli.Util;
+import org.jboss.as.cli.scriptsupport.CLI;
 import org.jboss.dmr.ModelNode;
 
 /**
@@ -53,14 +55,40 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
 
     private CommandContext cmdCtx = null;
 
-    private CommandContextConfiguration ctx;
-
+    private String username;
+    
     private int exitCode = 0;
 
     public WildflyDatabaseConnection(WildflyConnection con) {
         this.url = con.getUrl();
         this.info = con.getInfo();
-        this.exitCode = connect();
+        
+        // load domain profile
+        domainProfile = info.getProperty(Config.CONFIG_BASE + ".domain.profile", "");
+
+        // load CLI properties
+        String cliPropertyFile = info.getProperty(Config.CONFIG_BASE + ".properties");
+        LogFactory.getLogger().info("Load CLI properties: " + cliPropertyFile);        
+        if (cliPropertyFile != null) {
+            cliProperties = new Properties();
+            try (InputStream in = Files.newInputStream(Paths.get(cliPropertyFile))) {
+                cliProperties.load(in);
+            } catch (Exception e) {
+                LogFactory.getLogger().severe(e.getMessage(), e);
+            }
+        }
+        
+        // open connection
+        String tmp = null;
+        if (url != null) {
+            tmp = url.substring(8);
+        }
+        if (tmp.startsWith("embed-server")) {
+            this.exitCode = connectEmbedded(tmp);
+        } else {
+            this.exitCode = connect(tmp);
+        }
+        
     }
 
     public String getDomainProfile() {
@@ -141,7 +169,7 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
 
     @Override
     public String getConnectionUserName() {
-        return ctx.getUsername();
+        return username;
     }
 
     @Override
@@ -162,35 +190,36 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
         return 0;
     }
 
-    private int connect() {
-        int result = 0;
+    private int connectEmbedded(String command) {
+         LogFactory.getLogger().info("Start wildfly server in the embedded mode: " + command);
+        int result = 0;                
+        try {
+            
+            System.setProperty("java.util.logging.manager","org.jboss.logmanager.LogManager");
+            
+            CLI c = CLI.newInstance();
+            cmdCtx = c.getCommandContext();
+            c.cmd(command);
+        } catch (Throwable t) {
+            LogFactory.getLogger().severe(Util.getMessagesFromThrowable(t));
+            result = 1;
+        }
+        return result;
+    }
 
-        domainProfile = info.getProperty(Config.CONFIG_BASE + ".domain.profile", "");
+    private int connect(String controller) {
+        LogFactory.getLogger().info("Connect to remote server: " + controller);
+        int result = 0;
 
         final CommandContextConfiguration.Builder ctxBuilder = new CommandContextConfiguration.Builder();
         ctxBuilder.setErrorOnInteract(false);
-//        ctxBuilder.setSilent(true);
-//        ctxBuilder.setInitConsole(false);
 
-        String cliPropertyFile = info.getProperty(Config.CONFIG_BASE + ".properties");
-        if (cliPropertyFile != null) {
-            cliProperties = new Properties();
-            try (InputStream in = Files.newInputStream(Paths.get(cliPropertyFile))) {
-                cliProperties.load(in);
-            } catch (Exception e) {
-                LogFactory.getLogger().severe(e.getMessage(), e);
-            }
-        }
-
-        String controller = null;
-        if (url != null) {
-            controller = url.substring(8);
-        }
         if (controller != null && !controller.isEmpty()) {
             ctxBuilder.setController(controller);
         }
-        String user = info.getProperty("user");
+        String user = info.getProperty("username");
         if (user != null && !user.isEmpty()) {
+            username = user;
             ctxBuilder.setUsername(user);
             ctxBuilder.setDisableLocalAuth(true);
         }
@@ -225,7 +254,7 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
         ctxBuilder.setConnectionTimeout(connectionTimeout);
 
         try {
-            ctx = ctxBuilder.build();
+            CommandContextConfiguration ctx = ctxBuilder.build();
             cmdCtx = CommandContextFactory.getInstance().newCommandContext(ctx);
             try {
                 cmdCtx.connectController();
@@ -260,7 +289,7 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
                 cmdCtx.handle(command);
                 cmdCtx.releaseOutput();
                 String tmp = new String(baos.toByteArray(), StandardCharsets.UTF_8);
-                result = ModelNode.fromString(tmp);                
+                result = ModelNode.fromString(tmp);
             } catch (Exception ex) {
                 LogFactory.getLogger().debug(ex.getMessage(), ex);
                 result = ModelNode.fromString(ex.getMessage());
