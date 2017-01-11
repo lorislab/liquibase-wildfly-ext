@@ -149,13 +149,11 @@ public class MaxCheckPrecondition extends AbstractPrecondition {
             }
             
             if (result == null) {
-                LogFactory.getInstance().getLog().severe("No rows returned from SQL Precondition");                
                 throw new PreconditionFailedException("No rows returned from SQL Precondition", changeLog, this);
             }
 
             String expectedResult = getExpectedId();
             if (!expectedResult.equals(result)) {
-                LogFactory.getInstance().getLog().severe("SQL Precondition failed.  Expected id '" + expectedResult + "' got '" + result + "'");
                 throw new PreconditionFailedException("SQL Precondition failed.  Expected id '" + expectedResult + "' got '" + result + "'", changeLog, this);
             }
         } catch (PreconditionFailedException ee) {
