@@ -26,51 +26,85 @@ import liquibase.ext.wildfly.database.WildflyDatabase;
 import liquibase.ext.wildfly.database.WildflyDatabaseConnection;
 import liquibase.lockservice.DatabaseChangeLogLock;
 import liquibase.lockservice.LockService;
+import org.jboss.as.controller.client.helpers.ClientConstants;
+import org.jboss.as.controller.client.helpers.Operations;
 import org.jboss.dmr.ModelNode;
 
 /**
- *
+ * The wildfly lock service.
+ * 
  * @author Andrej Petras
  */
-public class NoOpLockService implements LockService {
+public class WildflyLockService implements LockService {
 
+    /**
+     * The lock value separator.
+     */
+    private static final String SEPARATOR = "#";
+    
+    /**
+     * The date format for the date key in the lock value.
+     */
     private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss");
 
+    /**
+     * The wildfly server.
+     */
     private WildflyDatabase database;
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public int getPriority() {
         return 1000;
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public boolean supports(Database database) {
         return database instanceof WildflyDatabase;
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void setDatabase(Database database) {
         this.database = (WildflyDatabase) database;
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void setChangeLogLockWaitTime(long changeLogLockWaitTime) {
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void setChangeLogLockRecheckTime(long changeLogLocRecheckTime) {
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public boolean hasChangeLogLock() {
-        ModelNode node = lock("read-resource");
-        String outcome = node.get("outcome").asString();
-        if (outcome.equals("success")) {
+        ModelNode node = lock(ClientConstants.READ_RESOURCE_OPERATION);
+        if (Operations.isSuccessfulOutcome(node)) {
             return true;
         }
         return false;
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void waitForLock() throws LockException {
         boolean tmp = acquireLock();
@@ -84,36 +118,50 @@ public class NoOpLockService implements LockService {
         }
 
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public boolean acquireLock() throws LockException {
         String author = System.getProperty("user.name");
         String date = SDF.format(new Date());
-        ModelNode node = lock("add(value=" + date + "#" + author + ")");
-        String outcome = node.get("outcome").asString();
-        if (outcome.equals("success")) {
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(ClientConstants.ADD).append('(');
+        sb.append(ClientConstants.VALUE).append('=');
+        sb.append(date).append(SEPARATOR);
+        sb.append(author).append(')');
+        
+        ModelNode node = lock(sb.toString());
+        
+        if (Operations.isSuccessfulOutcome(node)) {
             return true;
         }
         return false;
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void releaseLock() throws LockException {
-        ModelNode node = lock("remove");
-        String outcome = node.get("outcome").asString();
-        if (outcome.equals("failed")) {
-            String value = node.get("failure-description").asString();
+        ModelNode node = lock(ClientConstants.REMOVE_OPERATION);
+        if (!Operations.isSuccessfulOutcome(node)) {            
+            String value = Operations.getFailureDescription(node).asString();
             throw new RuntimeException("Could not release lock! Error: " + value);
         }
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public DatabaseChangeLogLock[] listLocks() throws LockException {
-        ModelNode node = lock("read-resource");
-        String outcome = node.get("outcome").asString();
-        if (outcome.equals("success")) {
-            String value = node.get("result").asObject().get("value").asString();
-            String[] tmp = value.split("#");
+        ModelNode node = lock(ClientConstants.READ_RESOURCE_OPERATION);
+        if (Operations.isSuccessfulOutcome(node)) {            
+            String value =  node.get(ClientConstants.RESULT).asObject().get(ClientConstants.VALUE).asString();
+            String[] tmp = value.split(SEPARATOR);
             String user = tmp[1];
 
             Date date = null;
@@ -128,22 +176,34 @@ public class NoOpLockService implements LockService {
         } 
         return new DatabaseChangeLogLock[0];
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void forceReleaseLock() throws LockException, DatabaseException {
         releaseLock();
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void reset() {
 
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void init() throws DatabaseException {
 
     }
-
+    
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void destroy() throws DatabaseException {
 

@@ -16,7 +16,6 @@
 package liquibase.ext.wildfly.database;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -40,7 +39,8 @@ import org.jboss.as.cli.scriptsupport.CLI;
 import org.jboss.dmr.ModelNode;
 
 /**
- *
+ * The wildfly server connection.
+ * 
  * @author Andrej Petras
  */
 public class WildflyDatabaseConnection implements DatabaseConnection {
@@ -67,9 +67,9 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
         domainProfile = info.getProperty(Config.CONFIG_BASE + ".domain.profile", "");
 
         // load CLI properties
-        String cliPropertyFile = info.getProperty(Config.CONFIG_BASE + ".properties");
-        LogFactory.getLogger().info("Load CLI properties: " + cliPropertyFile);        
+        String cliPropertyFile = info.getProperty(Config.CONFIG_BASE + ".properties");                
         if (cliPropertyFile != null) {
+            LogFactory.getLogger().info("Load CLI properties: " + cliPropertyFile);
             cliProperties = new Properties();
             try (InputStream in = Files.newInputStream(Paths.get(cliPropertyFile))) {
                 cliProperties.load(in);
@@ -124,12 +124,12 @@ public class WildflyDatabaseConnection implements DatabaseConnection {
 
     @Override
     public String getCatalog() throws DatabaseException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return null;
     }
 
     @Override
     public String nativeSQL(String string) throws DatabaseException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return null;
     }
 
     @Override
